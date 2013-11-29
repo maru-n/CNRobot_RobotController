@@ -19,18 +19,35 @@ void testApp::setup(){
 	connectTime = 0;
 	deltaTime = 0;
 
+    rightWheelNeuron = leftWheelNeuron = 0.0;
+
 	tcpClient.setVerbose(true);
     
     for(int i=0; i<CHANNEL_NUM; i++) {
         channelSpikedNum[i] = 0;
     }
-
+    
+	if (!usbdev.initUSB()) {
+		cerr << "Problem connecting to the USB device." << endl;
+        exit();
+	}
+    
+	usbdev.setDebugLevel(3);
+	elisa = new Elisa3Manager(&usbdev);
+    elisaTestRunning = false;
+    neuronEmbodied = false;
+    led = 1;
+    
+    elisaIndex = elisa->addElisa3(ELISA_INDEX);
+    
+    stopElisa(elisaIndex);
+    updateElisaNeuronEmbodied(elisaIndex);
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
-
+    rightWheelNeuron = leftWheelNeuron = 0.0;
 	if(tcpClient.isConnected()){
         string data = tcpClient.receiveRaw();
         for(int i = 0; i < (int)data.size(); ++i){
@@ -39,8 +56,14 @@ void testApp::update(){
                 ofLog() << "Invalid Data: channel-" << (int)c;
             }
             channelSpikedNum[c]++;
+            if (c<CHANNEL_NUM/2) {
+                rightWheelNeuron += 1.0;
+            }else{
+                leftWheelNeuron += 1.0;
+            }
         }
     }
+    updateElisa(elisaIndex);
 }
 
 //--------------------------------------------------------------
@@ -60,19 +83,46 @@ void testApp::draw(){
     }
     
 	ofDrawBitmapString(str, 15, 30);
+    
+    str = "";
+    str = ofToString(leftWheelNeuron) + " / " + ofToString(rightWheelNeuron);
+    ofDrawBitmapString(str, 300, 30);
 }
 
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     switch (key) {
-        case 'r':
+        case 'c':
             tcpClient.setup(ADRESS, PORT);
+            break;
+            
+        case 't':
+            if (!elisaTestRunning) {
+                startElisaTestRun(elisaIndex);
+            }else{
+                stopElisaTestRun(elisaIndex);
+            }
+            break;
+            
+        case 'e':
+            stopElisaTestRun(elisaIndex);
+            neuronEmbodied = !neuronEmbodied;
+            break;
+            
+        case 's':
+            stopElisa(elisaIndex);
             break;
             
         default:
             break;
     }
+}
+
+//--------------------------------------------------------------
+void testApp::exit(){
+    stopElisa(elisaIndex);
+    delete elisa;
 }
 
 //--------------------------------------------------------------
@@ -112,4 +162,81 @@ void testApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void testApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+//--------------------------------------------------------------
+void testApp::updateElisa(int elisaIndex){
+    if( elisaTestRunning ) {
+        updateElisaTestRun(elisaIndex);
+    }else if( neuronEmbodied ){
+        updateElisaNeuronEmbodied(elisaIndex);
+    }
+}
+
+//--------------------------------------------------------------
+void testApp::updateElisaNeuronEmbodied(int elisaIndex){
+    elisa->setRGBLeds(elisaIndex, 256, 256, 256);
+	elisa->setGreenLeds(elisaIndex, 0);
+	elisa->setMotorSpeed(elisaIndex, (int)(rightWheelNeuron*wheelSinapticWeight), (int)(leftWheelNeuron*wheelSinapticWeight));
+    for (unsigned i=0; i<4; ++i) {
+        if (!elisa->sendCommands())
+            std::cout << "Data failed to be sent." << std::endl;
+        if (elisa->receiveData())
+            std::cout << "Data received." << std::endl;
+    }
+    elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
+}
+
+
+//--------------------------------------------------------------
+void testApp::stopElisa(int elisaIndex){
+    elisa->setRGBLeds(elisaIndex, 0,0,0);
+	elisa->setGreenLeds(elisaIndex, 0);
+	elisa->setMotorSpeed(elisaIndex, 0, 0);
+    for (unsigned i=0; i<4; ++i) {
+        if (!elisa->sendCommands())
+            std::cout << "Data failed to be sent." << std::endl;
+        if (elisa->receiveData())
+            std::cout << "Data received." << std::endl;
+    }
+    elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
+    neuronEmbodied = false;
+    elisaTestRunning = false;
+}
+
+//--------------------------------------------------------------
+void testApp::startElisaTestRun(int elisaIndex){
+    led = 1;
+    elisaTestRunning = true;
+}
+
+//--------------------------------------------------------------
+void testApp::stopElisaTestRun(int elisaIndex){
+    stopElisa(elisaIndex);
+    elisaTestRunning = false;
+}
+
+//--------------------------------------------------------------
+void testApp::updateElisaTestRun(int elisaIndex){
+    int nowSec = ofGetElapsedTimeMillis()/1000;
+    int preSec = elisaLastUpdateMillSec/1000;
+    if( nowSec != preSec ) {
+        if (led == 128)
+            led = 1;
+        else
+            led *=2;
+        elisa->setGreenLeds(elisaIndex, led);
+        elisa->setMotorSpeed(elisaIndex, 25, -25);
+        for (unsigned i=0; i<4; ++i) {
+            if (!elisa->sendCommands())
+                std::cout << "Data failed to be sent." << std::endl;
+            if (elisa->receiveData())
+                std::cout << "Data received." << std::endl;
+        }
+        elisa->getIRSensorValues(elisaIndex,irvalues);
+        std::cout << "IR values = " ;
+        for (unsigned i=0; i<irvalues.size(); ++i)
+            std::cout << irvalues[i] << " ";
+        std::cout << std::endl;
+    }
 }
