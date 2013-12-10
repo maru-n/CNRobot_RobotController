@@ -1,9 +1,5 @@
 #include "testApp.h"
 
-#define RECONNECT_TIME 400
-
-#define ADRESS "192.168.56.3"
-#define PORT 12345
 
 //--------------------------------------------------------------
 void testApp::setup(){
@@ -22,6 +18,7 @@ void testApp::setup(){
     rightWheelNeuron = leftWheelNeuron = 0.0;
 
 	tcpClient.setVerbose(true);
+    stimulusTcpClient.setVerbose(true);
     
     for(int i=0; i<CHANNEL_NUM; i++) {
         channelSpikedNum[i] = 0;
@@ -63,6 +60,7 @@ void testApp::update(){
             }
         }
     }
+    
     updateElisa(elisaIndex);
 }
 
@@ -87,6 +85,16 @@ void testApp::draw(){
     str = "";
     str = ofToString(leftWheelNeuron) + " / " + ofToString(rightWheelNeuron);
     ofDrawBitmapString(str, 300, 30);
+    
+    str =  "IR values = " ;
+    for (unsigned i=0; i<irvalues.size(); ++i) {
+        str += "[";
+        str += ofToString(i);
+        str += "]";
+        str += ofToString( irvalues[i] );
+        str += "  ";
+    }
+    ofDrawBitmapString(str, 15, 300);
 }
 
 
@@ -94,7 +102,14 @@ void testApp::draw(){
 void testApp::keyPressed(int key){
     switch (key) {
         case 'c':
-            tcpClient.setup(ADRESS, PORT);
+            if( !tcpClient.setup(ADRESS, PORT) ) {
+                cerr << "Could not connect to signal server." << endl;
+            }
+            /*
+            if ( !stimulusTcpClient.setup(ADRESS, STIMULUS_PORT) ) {
+                cerr << "Could not connect to stimulus server." << endl;
+            }*/
+
             break;
             
         case 't':
@@ -170,6 +185,14 @@ void testApp::updateElisa(int elisaIndex){
         updateElisaTestRun(elisaIndex);
     }else if( neuronEmbodied ){
         updateElisaNeuronEmbodied(elisaIndex);
+    }else{
+        for (unsigned i=0; i<4; ++i) {
+            if (!elisa->sendCommands())
+                std::cout << "Data failed to be sent." << std::endl;
+            if (elisa->receiveData())
+                std::cout << "Data received." << std::endl;
+        }
+        elisa->getIRSensorValues(elisaIndex,irvalues);
     }
 }
 
@@ -177,13 +200,16 @@ void testApp::updateElisa(int elisaIndex){
 void testApp::updateElisaNeuronEmbodied(int elisaIndex){
     elisa->setRGBLeds(elisaIndex, 256, 256, 256);
 	elisa->setGreenLeds(elisaIndex, 0);
-	elisa->setMotorSpeed(elisaIndex, (int)(rightWheelNeuron*wheelSinapticWeight), (int)(leftWheelNeuron*wheelSinapticWeight));
+	elisa->setMotorSpeed(elisaIndex,
+                         min((int)(leftWheelNeuron*wheelSinapticWeight),128),
+                         min((int)(rightWheelNeuron*wheelSinapticWeight),128));
     for (unsigned i=0; i<4; ++i) {
         if (!elisa->sendCommands())
             std::cout << "Data failed to be sent." << std::endl;
         if (elisa->receiveData())
             std::cout << "Data received." << std::endl;
     }
+    elisa->getIRSensorValues(elisaIndex,irvalues);
     elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
 }
 
@@ -199,7 +225,9 @@ void testApp::stopElisa(int elisaIndex){
         if (elisa->receiveData())
             std::cout << "Data received." << std::endl;
     }
+    elisa->getIRSensorValues(elisaIndex,irvalues);
     elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
+    
     neuronEmbodied = false;
     elisaTestRunning = false;
 }
@@ -234,9 +262,6 @@ void testApp::updateElisaTestRun(int elisaIndex){
                 std::cout << "Data received." << std::endl;
         }
         elisa->getIRSensorValues(elisaIndex,irvalues);
-        std::cout << "IR values = " ;
-        for (unsigned i=0; i<irvalues.size(); ++i)
-            std::cout << irvalues[i] << " ";
-        std::cout << std::endl;
+        elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
     }
 }

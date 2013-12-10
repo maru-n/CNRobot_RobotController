@@ -5,10 +5,19 @@
 #include "UsbDevice.h"
 #include "Elisa3Manager.h"
 
+
+#define RECONNECT_TIME 400
+
+#define ADRESS "192.168.56.3"
+#define PORT 12345
+#define STIMULUS_PORT 12346
+
 #define CHANNEL_NUM 126
 
-//#define ELISA_INDEX 3259
-#define ELISA_INDEX 3262
+#define ELISA_INDEX 3259
+//#define ELISA_INDEX 3261
+//#define ELISA_INDEX 3262
+
 
 class testApp : public ofBaseApp{
 
@@ -36,8 +45,10 @@ private:
     void updateElisa(int elisaIndex);
     void updateElisaTestRun(int elisaIndex);
     void updateElisaNeuronEmbodied(int elisaIndex);
+    //void sendStimulus(unsigne char channel);
     
 	ofxTCPClient tcpClient;
+    ofxTCPClient stimulusTcpClient;
 
     ofTrueTypeFont  mono;
 	ofTrueTypeFont  monosm;
@@ -50,7 +61,7 @@ private:
     //bool weConnected;
     
     float rightWheelNeuron, leftWheelNeuron;
-    const float wheelSinapticWeight = 3.0;
+    const float wheelSinapticWeight = 2.0;
 
 	int size;
 	int pos;
