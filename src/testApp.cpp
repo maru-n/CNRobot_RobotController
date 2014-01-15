@@ -60,6 +60,14 @@ void testApp::update(){
             }
         }
     }
+
+    if(stimulusTcpClient.isConnected()) {
+        unsigned int irVluesSum = 0;
+        for (unsigned i=0; i<irvalues.size(); ++i) {
+            irVluesSum += irvalues[i];
+        }
+        stimulusTcpClient.send(ofToString(irVluesSum)+"\n");
+    }
     
     updateElisa(elisaIndex);
 }
@@ -105,10 +113,9 @@ void testApp::keyPressed(int key){
             if( !tcpClient.setup(ADRESS, PORT) ) {
                 cerr << "Could not connect to signal server." << endl;
             }
-            /*
             if ( !stimulusTcpClient.setup(ADRESS, STIMULUS_PORT) ) {
                 cerr << "Could not connect to stimulus server." << endl;
-            }*/
+            }
 
             break;
             
