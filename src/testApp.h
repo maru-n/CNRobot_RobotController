@@ -8,16 +8,16 @@
 
 #define RECONNECT_TIME 400
 
-//#define ADRESS "192.168.56.3"
-#define ADRESS "localhost"
+#define ADRESS "192.168.56.3"
+//#define ADRESS "localhost"
 #define PORT 12345
 #define STIMULUS_PORT 12346
 
 #define CHANNEL_NUM 126
 
-#define ELISA_INDEX 3259
+//#define ELISA_INDEX 3259
 //#define ELISA_INDEX 3261
-//#define ELISA_INDEX 3262
+#define ELISA_INDEX 3262
 
 
 class testApp : public ofBaseApp{
