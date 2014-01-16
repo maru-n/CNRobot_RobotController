@@ -18,7 +18,7 @@ void testApp::setup(){
     rightWheelNeuron = leftWheelNeuron = 0.0;
 
 	tcpClient.setVerbose(true);
-    stimulusTcpClient.setVerbose(true);
+    //stimulusTcpClient.setVerbose(true);
     
     for(int i=0; i<CHANNEL_NUM; i++) {
         channelSpikedNum[i] = 0;
@@ -39,11 +39,23 @@ void testApp::setup(){
     
     stopElisa(elisaIndex);
     updateElisaNeuronEmbodied(elisaIndex);
+    
+    sendData[0] = sendData[1] = -1;
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
+    
+    if(irvalues[0]>50) {
+        sendData[0] = 0; //DAC
+        sendData[1] = 3; //channel
+        tcpClient.sendRawBytes((char*)sendData, 2);
+    }else{
+        sendData[0] = -1;
+        sendData[1] = -1;
+    }
+
     rightWheelNeuron = leftWheelNeuron = 0.0;
 	if(tcpClient.isConnected()){
         string data = tcpClient.receiveRaw();
@@ -59,14 +71,10 @@ void testApp::update(){
                 leftWheelNeuron += 1.0;
             }
         }
-    }
 
-    if(stimulusTcpClient.isConnected()) {
-        unsigned int irVluesSum = 0;
-        for (unsigned i=0; i<irvalues.size(); ++i) {
-            irVluesSum += irvalues[i];
+        if (sendData[0] != -1) {
+            tcpClient.sendRawBytes((char*)sendData, 2);
         }
-        stimulusTcpClient.send(ofToString(irVluesSum)+"\n");
     }
     
     updateElisa(elisaIndex);
@@ -103,6 +111,17 @@ void testApp::draw(){
         str += "  ";
     }
     ofDrawBitmapString(str, 15, 300);
+    
+    str = "Stimulus: ";
+    if (sendData[0] != -1) {
+        str += "DAC#";
+        str += ofToString(sendData[0]);
+        str += " Channel#";
+        str += ofToString(sendData[1]);
+    }else{
+        str += "None";
+    }
+    ofDrawBitmapString(str, 15, 320);
 }
 
 
@@ -113,9 +132,10 @@ void testApp::keyPressed(int key){
             if( !tcpClient.setup(ADRESS, PORT) ) {
                 cerr << "Could not connect to signal server." << endl;
             }
+            /*
             if ( !stimulusTcpClient.setup(ADRESS, STIMULUS_PORT) ) {
                 cerr << "Could not connect to stimulus server." << endl;
-            }
+            }*/
 
             break;
             

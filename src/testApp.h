@@ -10,8 +10,8 @@
 
 #define ADRESS "192.168.56.3"
 //#define ADRESS "localhost"
-#define PORT 12345
-#define STIMULUS_PORT 12346
+#define PORT 32130
+#define STIMULUS_PORT 32131
 
 #define CHANNEL_NUM 126
 
@@ -49,7 +49,7 @@ private:
     //void sendStimulus(unsigne char channel);
     
 	ofxTCPClient tcpClient;
-    ofxTCPClient stimulusTcpClient;
+    //ofxTCPClient stimulusTcpClient;
 
     ofTrueTypeFont  mono;
 	ofTrueTypeFont  monosm;
@@ -78,5 +78,7 @@ private:
     int elisaIndex;
     unsigned char led=1;
     std::vector<unsigned> irvalues;
+    
+    int sendData[2];
 };
 
