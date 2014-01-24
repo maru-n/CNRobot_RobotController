@@ -19,16 +19,16 @@ void testApp::setup(){
 
 	tcpClient.setVerbose(true);
     //stimulusTcpClient.setVerbose(true);
-    
+
     for(int i=0; i<CHANNEL_NUM; i++) {
         channelSpikedNum[i] = 0;
     }
-    
+
 	if (!usbdev.initUSB()) {
 		cerr << "Problem connecting to the USB device." << endl;
         exit();
 	}
-    
+
 	usbdev.setDebugLevel(3);
 	elisa = new Elisa3Manager(&usbdev);
     elisaTestRunning = false;
@@ -46,7 +46,7 @@ void testApp::setup(){
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
-    
+
     if(irvalues[0]>50) {
         sendData[0] = 0; //DAC
         sendData[1] = 3; //channel
@@ -132,11 +132,6 @@ void testApp::keyPressed(int key){
             if( !tcpClient.setup(ADRESS, PORT) ) {
                 cerr << "Could not connect to signal server." << endl;
             }
-            /*
-            if ( !stimulusTcpClient.setup(ADRESS, STIMULUS_PORT) ) {
-                cerr << "Could not connect to stimulus server." << endl;
-            }*/
-
             break;
             
         case 't':

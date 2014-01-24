@@ -49,7 +49,6 @@ private:
     //void sendStimulus(unsigne char channel);
     
 	ofxTCPClient tcpClient;
-    //ofxTCPClient stimulusTcpClient;
 
     ofTrueTypeFont  mono;
 	ofTrueTypeFont  monosm;
@@ -59,7 +58,6 @@ private:
 	int deltaTime;
 
     unsigned short int channelSpikedNum[CHANNEL_NUM];
-    //bool weConnected;
     
     float rightWheelNeuron, leftWheelNeuron;
     const float wheelSinapticWeight = 2.0;
