@@ -6,6 +6,8 @@ void testApp::setup(){
 
 	// we don't want to be running to fast
     //ofSetVerticalSync(true);
+    
+    ofSetFrameRate(30);
 
 
     //tcpClient.setup(ADRESS, PORT);
@@ -16,14 +18,17 @@ void testApp::setup(){
 	deltaTime = 0;
 
     rightWheelNeuron = leftWheelNeuron = 0.0;
-
+    
 	tcpClient.setVerbose(true);
-    //stimulusTcpClient.setVerbose(true);
-
+    
     for(int i=0; i<CHANNEL_NUM; i++) {
         channelSpikedNum[i] = 0;
     }
+    
+    neuronEmbodied = false;
+    led = 1;
 
+    /*
 	if (!usbdev.initUSB()) {
 		cerr << "Problem connecting to the USB device." << endl;
         exit();
@@ -32,29 +37,20 @@ void testApp::setup(){
 	usbdev.setDebugLevel(3);
 	elisa = new Elisa3Manager(&usbdev);
     elisaTestRunning = false;
-    neuronEmbodied = false;
-    led = 1;
+
     
     elisaIndex = elisa->addElisa3(ELISA_INDEX);
     
     stopElisa(elisaIndex);
     updateElisaNeuronEmbodied(elisaIndex);
+     */
     
-    sendData[0] = sendData[1] = -1;
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
 
-    if(irvalues[0]>50) {
-        sendData[0] = 0; //DAC
-        sendData[1] = 3; //channel
-        tcpClient.sendRawBytes((char*)sendData, 2);
-    }else{
-        sendData[0] = -1;
-        sendData[1] = -1;
-    }
 
     rightWheelNeuron = leftWheelNeuron = 0.0;
 	if(tcpClient.isConnected()){
@@ -71,13 +67,23 @@ void testApp::update(){
                 leftWheelNeuron += 1.0;
             }
         }
-
+        /*
         if (sendData[0] != -1) {
             tcpClient.sendRawBytes((char*)sendData, 2);
         }
+         */
     }
     
-    updateElisa(elisaIndex);
+    if (elisa != NULL) {
+        if(irvalues[0]>50) {
+            setStimulusData(0,3);
+            if (tcpClient.isConnected()) {
+                isSentStimulusData = sendStimulusData();
+            }
+        }
+        updateElisa(elisaIndex);
+    }
+
 }
 
 //--------------------------------------------------------------
@@ -113,14 +119,15 @@ void testApp::draw(){
     ofDrawBitmapString(str, 15, 300);
     
     str = "Stimulus: ";
-    if (sendData[0] != -1) {
+    if (isSentStimulusData) {
         str += "DAC#";
-        str += ofToString(sendData[0]);
+        str += ofToString(stimulusDac);
         str += " Channel#";
-        str += ofToString(sendData[1]);
+        str += ofToString(stimulusChannel);
     }else{
         str += "None";
     }
+    isSentStimulusData = false;
     ofDrawBitmapString(str, 15, 320);
 }
 
@@ -128,6 +135,24 @@ void testApp::draw(){
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
     switch (key) {
+        case 'r': {
+            if (!usbdev.initUSB()) {
+                cerr << "Problem connecting to the USB device." << endl;
+                exit();
+            }
+            
+            usbdev.setDebugLevel(3);
+            elisa = new Elisa3Manager(&usbdev);
+            elisaIndex = elisa->addElisa3(ELISA_INDEX);
+            elisaTestRunning = false;
+            neuronEmbodied = false;
+            led = 1;
+            stopElisa(elisaIndex);
+            //updateElisaNeuronEmbodied(elisaIndex);
+            }
+            break;
+            
+            
         case 'c':
             if( !tcpClient.setup(ADRESS, PORT) ) {
                 cerr << "Could not connect to signal server." << endl;
@@ -150,6 +175,13 @@ void testApp::keyPressed(int key){
         case 's':
             stopElisa(elisaIndex);
             break;
+            
+        case 'S': {
+            setStimulusData(0, 3);
+            isSentStimulusData = sendStimulusData();
+            }
+            break;
+            
             
         default:
             break;
@@ -199,6 +231,23 @@ void testApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void testApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+//--------------------------------------------------------------
+void testApp::setStimulusData(int dac, int channel){
+    if( (dac != 0 && dac != 1) || channel < 0 || channel >125) {
+        return;
+    }
+    stimulusDac = dac;
+    stimulusChannel = channel;
+}
+
+//--------------------------------------------------------------
+bool testApp::sendStimulusData(){
+    unsigned char sendData = ((unsigned char)stimulusDac << 7) | (unsigned char)stimulusChannel;
+    //char sendData = 0b10000011;
+    std::cout << std::bitset<8>(sendData) << std::endl;
+    tcpClient.sendRawBytes((char*)&sendData, 1);
 }
 
 //--------------------------------------------------------------

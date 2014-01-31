@@ -8,10 +8,11 @@
 
 #define RECONNECT_TIME 400
 
-#define ADRESS "192.168.56.3"
-//#define ADRESS "localhost"
+//#define ADRESS "192.168.56.3"
+#define ADRESS "localhost"
+//#define PORT 45241
 #define PORT 32130
-#define STIMULUS_PORT 32131
+//#define STIMULUS_PORT 32131
 
 #define CHANNEL_NUM 126
 
@@ -46,6 +47,9 @@ private:
     void updateElisa(int elisaIndex);
     void updateElisaTestRun(int elisaIndex);
     void updateElisaNeuronEmbodied(int elisaIndex);
+    void setStimulusData(int dac, int channel);
+    bool sendStimulusData();
+
     //void sendStimulus(unsigne char channel);
     
 	ofxTCPClient tcpClient;
@@ -77,6 +81,8 @@ private:
     unsigned char led=1;
     std::vector<unsigned> irvalues;
     
-    int sendData[2];
+    bool isSentStimulusData;
+    int stimulusDac;
+    int stimulusChannel;
 };
 
