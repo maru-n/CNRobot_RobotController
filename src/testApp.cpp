@@ -244,6 +244,11 @@ void testApp::setStimulusData(int dac, int channel){
 
 //--------------------------------------------------------------
 bool testApp::sendStimulusData(){
+    //for example,
+    //dac = 1 = 0b00000001
+    //dac << 7 = 0b10000000
+    //channel = 3 = 0b00000011
+    //sendData = ( 0b10000000 | 0b00000011 ) = 0b10000011
     unsigned char sendData = ((unsigned char)stimulusDac << 7) | (unsigned char)stimulusChannel;
     //char sendData = 0b10000011;
     std::cout << std::bitset<8>(sendData) << std::endl;
