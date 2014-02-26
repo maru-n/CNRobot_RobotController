@@ -7,7 +7,7 @@ void testApp::setup(){
 	// we don't want to be running to fast
     //ofSetVerticalSync(true);
     
-    ofSetFrameRate(30);
+    ofSetFrameRate(10);
 
 
     //tcpClient.setup(ADRESS, PORT);
@@ -16,7 +16,6 @@ void testApp::setup(){
 	
 	connectTime = 0;
 	deltaTime = 0;
-
     rightWheelNeuron = leftWheelNeuron = 0.0;
     
 	tcpClient.setVerbose(true);
@@ -50,9 +49,8 @@ void testApp::setup(){
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
-
-
-    rightWheelNeuron = leftWheelNeuron = 0.0;
+    
+    rightWheelNeuron = leftWheelNeuron = 3.0;
 	if(tcpClient.isConnected()){
         string data = tcpClient.receiveRaw();
         for(int i = 0; i < (int)data.size(); ++i){
@@ -61,10 +59,13 @@ void testApp::update(){
                 ofLog() << "Invalid Data: channel-" << (int)c;
             }
             channelSpikedNum[c]++;
-            if (c<CHANNEL_NUM/2) {
-                rightWheelNeuron += 1.0;
-            }else{
-                leftWheelNeuron += 1.0;
+            int rate = 1;
+            if(stimSign) rate = 2/4;
+            else rate = 2/4;
+            
+            for(int j=0; j<10; j++){
+                if(c == outputL[j]) leftWheelNeuron -= 1.2*rate;
+                else if(c == outputR[j]) rightWheelNeuron -= 1.2*rate;
             }
         }
         /*
@@ -75,12 +76,21 @@ void testApp::update(){
     }
     
     if (elisa != NULL) {
-        if(irvalues[0]>50) {
-            setStimulusData(0,3);
+        
+        if(irvalues[1] > IR_THRESHOLD && rand()%1000 <  irvalues[1]) {
+            setStimulusData(0,inputR);
             if (tcpClient.isConnected()) {
                 isSentStimulusData = sendStimulusData();
             }
-        }
+            stimSign = true;
+        }else if(irvalues[7] > IR_THRESHOLD && rand()%1000 <  irvalues[7]) {
+            setStimulusData(1,inputL);
+            if (tcpClient.isConnected()) {
+                isSentStimulusData = sendStimulusData();
+            }
+            stimSign = true;
+        }else {stimSign = false;}
+        
         updateElisa(elisaIndex);
     }
 
@@ -244,11 +254,6 @@ void testApp::setStimulusData(int dac, int channel){
 
 //--------------------------------------------------------------
 bool testApp::sendStimulusData(){
-    //for example,
-    //dac = 1 = 0b00000001
-    //dac << 7 = 0b10000000
-    //channel = 3 = 0b00000011
-    //sendData = ( 0b10000000 | 0b00000011 ) = 0b10000011
     unsigned char sendData = ((unsigned char)stimulusDac << 7) | (unsigned char)stimulusChannel;
     //char sendData = 0b10000011;
     std::cout << std::bitset<8>(sendData) << std::endl;
