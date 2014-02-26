@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		125506cd3e5f428aafe5cc65 /* ofxTCPManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = f399b91e98dc31cda6ddacb4 /* ofxTCPManager.cpp */; };
+		51AF1CF618BDF42C0067CA18 /* libusb-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0A5FD481848352500E75E4D /* libusb-1.0.0.dylib */; };
 		66ca411c5a9664e27326bf36 /* ofxTCPServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1c085e327dab912cfa2a443d /* ofxTCPServer.cpp */; };
 		960d20b191346612d5c05a6a /* ofxTCPClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = bf88f02779dd820913acea06 /* ofxTCPClient.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		C03AD7C41848317100BA6163 /* Elisa3Manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03AD7C01848317100BA6163 /* Elisa3Manager.cpp */; };
 		C03AD7C51848317100BA6163 /* UsbDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03AD7C21848317100BA6163 /* UsbDevice.cpp */; };
-		C0A5FD491848352500E75E4D /* libusb-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0A5FD481848352500E75E4D /* libusb-1.0.0.dylib */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
 		E45BE97B0E8CC7DD009D7055 /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9710E8CC7DD009D7055 /* AGL.framework */; };
 		E45BE97C0E8CC7DD009D7055 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9720E8CC7DD009D7055 /* ApplicationServices.framework */; };
@@ -113,7 +113,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C0A5FD491848352500E75E4D /* libusb-1.0.0.dylib in Frameworks */,
+				51AF1CF618BDF42C0067CA18 /* libusb-1.0.0.dylib in Frameworks */,
 				E7F985F815E0DEA3003869B5 /* Accelerate.framework in Frameworks */,
 				E7E077E815D3B6510020DFD4 /* QTKit.framework in Frameworks */,
 				E4EB6799138ADC1D00A09F29 /* GLUT.framework in Frameworks */,
@@ -460,7 +460,11 @@
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = ./libs/lib;
+				LIBRARY_SEARCH_PATHS = (
+					./libs/lib,
+					"\"$(SRCROOT)/libs/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = neuralRobotControllerDebug;
 				WRAPPER_EXTENSION = app;
 			};
@@ -489,7 +493,11 @@
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = ./libs/lib;
+				LIBRARY_SEARCH_PATHS = (
+					./libs/lib,
+					"\"$(SRCROOT)/libs/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = neuralRobotController;
 				WRAPPER_EXTENSION = app;
 			};
