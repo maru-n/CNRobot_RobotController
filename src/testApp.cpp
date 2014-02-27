@@ -44,13 +44,22 @@ void testApp::setup(){
     updateElisaNeuronEmbodied(elisaIndex);
      */
     
+    //for calibration of some parameters
+    gui.setup();
+	gui.add(outputRate.setup( "output rate", 2, 0, 20));
+	gui.add(forwardSpeedL.setup( "left motor speed", 15, 0, 20));
+    gui.add(forwardSpeedR.setup( "right motor speed", 15, 0, 20));
+	gui.add(numberOfOutputNeurons.setup( "num of output neurons", 20, 0, 40));
+
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
 	ofBackground(230, 230, 230);
-    
-    rightWheelNeuron = leftWheelNeuron = 3.0;
+
+    rightWheelNeuron = (double)forwardSpeedR;
+    leftWheelNeuron = (double)forwardSpeedL;
+
 	if(tcpClient.isConnected()){
         string data = tcpClient.receiveRaw();
         for(int i = 0; i < (int)data.size(); ++i){
@@ -59,13 +68,10 @@ void testApp::update(){
                 ofLog() << "Invalid Data: channel-" << (int)c;
             }
             channelSpikedNum[c]++;
-            int rate = 1;
-            if(stimSign) rate = 2/4;
-            else rate = 2/4;
             
-            for(int j=0; j<10; j++){
-                if(c == outputL[j]) leftWheelNeuron -= 1.2*rate;
-                else if(c == outputR[j]) rightWheelNeuron -= 1.2*rate;
+            for(int j=0; j<(int)numberOfOutputNeurons; j++){
+                if(c == outputL[j]) leftWheelNeuron -= (double)outputRate;
+                else if(c == outputR[j]) rightWheelNeuron -= (double)outputRate;
             }
         }
         /*
@@ -77,19 +83,19 @@ void testApp::update(){
     
     if (elisa != NULL) {
         
-        if(irvalues[1] > IR_THRESHOLD && rand()%1000 <  irvalues[1]) {
-            setStimulusData(0,inputR);
-            if (tcpClient.isConnected()) {
-                isSentStimulusData = sendStimulusData();
-            }
-            stimSign = true;
-        }else if(irvalues[7] > IR_THRESHOLD && rand()%1000 <  irvalues[7]) {
-            setStimulusData(1,inputL);
-            if (tcpClient.isConnected()) {
-                isSentStimulusData = sendStimulusData();
-            }
-            stimSign = true;
-        }else {stimSign = false;}
+//        if(irvalues[1] > IR_THRESHOLD && rand()%1000 <  irvalues[1]) {
+//            setStimulusData(0,inputR);
+//            if (tcpClient.isConnected()) {
+//                isSentStimulusData = sendStimulusData();
+//            }
+//            stimSign = true;
+//        }else if(irvalues[7] > IR_THRESHOLD && rand()%1000 <  irvalues[7]) {
+//            setStimulusData(1,inputL);
+//            if (tcpClient.isConnected()) {
+//                isSentStimulusData = sendStimulusData();
+//            }
+//            stimSign = true;
+//        }else {stimSign = false;}
         
         updateElisa(elisaIndex);
     }
@@ -139,6 +145,8 @@ void testApp::draw(){
     }
     isSentStimulusData = false;
     ofDrawBitmapString(str, 15, 320);
+    gui.draw();
+
 }
 
 

@@ -4,7 +4,7 @@
 #include "ofxNetwork.h"
 #include "UsbDevice.h"
 #include "Elisa3Manager.h"
-
+#include "ofxGui.h"
 
 #define RECONNECT_TIME 400
 
@@ -89,5 +89,9 @@ private:
     int inputR = 21;
     
     bool stimSign;
+    
+    ofxPanel gui;
+    ofxFloatSlider outputRate, forwardSpeedL, forwardSpeedR;
+    ofxIntSlider numberOfOutputNeurons;
 };
 
