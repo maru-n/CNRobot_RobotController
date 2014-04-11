@@ -6,6 +6,12 @@
 #include "Elisa3Manager.h"
 #include "ofxGui.h"
 
+#include <fstream>
+#include <time.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
 #define RECONNECT_TIME 400
 
 #define ADRESS "127.0.0.1"
@@ -17,7 +23,7 @@
 //#define ELISA_INDEX 3259
 #define ELISA_INDEX 3261
 
-#define IR_THRESHOLD 20
+//#define IR_THRESHOLD 20
 
 class testApp : public ofBaseApp{
 
@@ -47,6 +53,7 @@ private:
     void updateElisaNeuronEmbodied(int elisaIndex);
     void setStimulusData(int dac, int channel);
     bool sendStimulusData();
+    void setRecordSensorData();
 
     //void sendStimulus(unsigne char channel);
     
@@ -83,15 +90,17 @@ private:
     int stimulusDac;
     int stimulusChannel;
     int count = 0;
-    int outputL[40] = {38 , 10 , 97 , 99 , 85 , 80 , 91 , 83 , 94 , 110 , 5 , 59 , 82 , 124 , 42 , 107 , 96 , 4 , 79 , 16 , 100 , 18 , 61 , 6 , 81 , 119 , 55 , 14 , 89 , 78 , 103 , 76 , 17 , 98 , 101 , 22 , 90 , 104 , 25 , 75};
-    int outputR[40] = {3 , 13 , 122 , 86 , 44 , 108 , 92 , 111 , 95 , 62 , 8 , 11 , 45 , 105 , 90 , 1 , 123 , 20 , 69 , 88 , 19 , 89 , 103 , 15 , 23 , 117 , 77 , 87 , 55 , 6 , 114 , 73 , 25 , 17 , 118 , 107 , 50 , 7 , 26 , 4};
-    int inputL = 47;
-    int inputR = 21;
+    int outputL[40] = {12 , 91 , 123 , 102 , 62 , 99 , 77 , 10 , 88 , 80 , 78 , 117 , 90 , 14 , 89 , 108 , 95 , 41 , 79 , 24 , 9 , 6 , 98 , 74 , 47 , 83 , 111 , 86 , 16 , 56 , 21 , 71 , 0 , 68 , 19 , 120 , 18 , 27 , 96 , 105};
+    int outputR[40] = {92 , 30 , 27 , 38 , 63 , 98 , 41 , 89 , 86 , 14 , 90 , 117 , 96 , 10 , 95 , 47 , 108 , 74 , 71 , 6 , 19 , 88 , 91 , 21 , 15 , 65 , 78 , 123 , 12 , 97 , 0 , 9 , 102 , 77 , 18 , 44 , 62 , 114 , 99 , 80};
+    int inputL = 15;
+    int inputR = 11;
     
     bool stimSign;
     
     ofxPanel gui;
-    ofxFloatSlider outputRate, forwardSpeedL, forwardSpeedR;
-    ofxIntSlider numberOfOutputNeurons;
+    ofxFloatSlider outputRateL,outputRateR, forwardSpeedL, forwardSpeedR;
+    ofxIntSlider frameRate, numberOfOutputNeurons, IRThreshold, MaxSpeed;
+    
+    std::ofstream ofs;
 };
 

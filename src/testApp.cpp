@@ -46,16 +46,23 @@ void testApp::setup(){
     
     //for calibration of some parameters
     gui.setup();
-	gui.add(outputRate.setup( "output rate", 2, 0, 20));
-	gui.add(forwardSpeedL.setup( "left motor speed", 15, 0, 20));
-    gui.add(forwardSpeedR.setup( "right motor speed", 15, 0, 20));
-	gui.add(numberOfOutputNeurons.setup( "num of output neurons", 20, 0, 40));
+    gui.add(frameRate.setup( "frame rate", 10, 0, 100));
+	gui.add(outputRateL.setup( "output rate Left", 0.3, 0, 1));
+    gui.add(outputRateR.setup( "output rate Right", 0.3, 0, 1));
+	gui.add(forwardSpeedL.setup( "left motor speed", 12.5, 0, 20));
+    gui.add(forwardSpeedR.setup( "right motor speed", 12.5, 0, 20));
+	gui.add(numberOfOutputNeurons.setup( "num of output neurons", 15, 0, 40));
+    gui.add(IRThreshold.setup( "IR sensor threshold", 70, 0, 500));
+    gui.add(MaxSpeed.setup( "max speed", 15, 0, 30));
 
+    gui.setPosition(10, 10);
+    
+    setRecordSensorData();
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-	ofBackground(230, 230, 230);
+	ofBackground(255);
 
     rightWheelNeuron = (double)forwardSpeedR;
     leftWheelNeuron = (double)forwardSpeedL;
@@ -70,8 +77,8 @@ void testApp::update(){
             channelSpikedNum[c]++;
             
             for(int j=0; j<(int)numberOfOutputNeurons; j++){
-                if(c == outputL[j]) leftWheelNeuron -= (double)outputRate;
-                else if(c == outputR[j]) rightWheelNeuron -= (double)outputRate;
+                if(c < 30 && leftWheelNeuron > -MaxSpeed) leftWheelNeuron -= (double)outputRateL;
+                else if(c > 30 && rightWheelNeuron > -MaxSpeed) rightWheelNeuron -= (double)outputRateR;
             }
         }
         /*
@@ -82,21 +89,23 @@ void testApp::update(){
     }
     
     if (elisa != NULL) {
-        
-//        if(irvalues[1] > IR_THRESHOLD && rand()%1000 <  irvalues[1]) {
-//            setStimulusData(0,inputR);
-//            if (tcpClient.isConnected()) {
-//                isSentStimulusData = sendStimulusData();
-//            }
-//            stimSign = true;
-//        }else if(irvalues[7] > IR_THRESHOLD && rand()%1000 <  irvalues[7]) {
-//            setStimulusData(1,inputL);
-//            if (tcpClient.isConnected()) {
-//                isSentStimulusData = sendStimulusData();
-//            }
-//            stimSign = true;
-//        }else {stimSign = false;}
-        
+
+
+        if(irvalues[1] > IRThreshold && rand()%1000 <  irvalues[1]) {
+            setStimulusData(0,inputR);
+            if (tcpClient.isConnected()) {
+                isSentStimulusData = sendStimulusData();
+            }
+            stimSign = true;
+        }else if(irvalues[7] > IRThreshold && rand()%1000 <  irvalues[7]) {
+            setStimulusData(1,inputL);
+            if (tcpClient.isConnected()) {
+                isSentStimulusData = sendStimulusData();
+            }
+            stimSign = true;
+        }else {stimSign = false;}
+        ofs << irvalues[0] << "," << irvalues[1] << "," << irvalues[7] << "\n";
+ 
         updateElisa(elisaIndex);
     }
 
@@ -105,7 +114,7 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
 
-	ofSetColor(20, 20, 20);
+	ofSetColor(0);
     
     string str = "";
     for (int i=0; i<CHANNEL_NUM; i++) {
@@ -118,11 +127,11 @@ void testApp::draw(){
         channelSpikedNum[i] = 0;
     }
     
-	ofDrawBitmapString(str, 15, 30);
+	ofDrawBitmapString(str, 250, 30);
     
     str = "";
     str = ofToString(leftWheelNeuron) + " / " + ofToString(rightWheelNeuron);
-    ofDrawBitmapString(str, 300, 30);
+    ofDrawBitmapString(str, 500, 30);
     
     str =  "IR values = " ;
     for (unsigned i=0; i<irvalues.size(); ++i) {
@@ -353,4 +362,31 @@ void testApp::updateElisaTestRun(int elisaIndex){
         elisa->getIRSensorValues(elisaIndex,irvalues);
         elisaLastUpdateMillSec = ofGetElapsedTimeMillis();
     }
+}
+
+void testApp::setRecordSensorData(){
+    int year, month, day;
+    int hour, minute;
+    
+    struct tm *date;
+    time_t now;
+    time(&now);
+    date = localtime(&now);
+    
+    year = date->tm_year + 1900;
+    month = date->tm_mon + 1;
+    day = date->tm_mday;
+    hour = date->tm_hour;
+    minute = date->tm_min;
+    
+//    char dir[255];
+//    getcwd(dir,255);
+//    cout<<"Current Directory : "<<dir<<endl;
+    
+    std::stringstream layer_str;
+    layer_str << "../../../sensordata"  <<"_" << year << "_" << month << "_" << day << "_" << hour << "_" << minute << "/";
+    mkdir(layer_str.str().c_str(),S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    
+    std::string result_C_path = layer_str.str() + "sensorData2.csv";
+    ofs.open(result_C_path.c_str());
 }
