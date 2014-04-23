@@ -278,6 +278,13 @@ bool testApp::sendStimulusData(){
 }
 
 //--------------------------------------------------------------
+bool testApp::sendKeepTimeSygnal() {
+    char sendData = 0b11111111;
+    tcpClient.sendRawBytes((char*)&sendData, 1);
+}
+
+
+//--------------------------------------------------------------
 void testApp::updateElisa(int elisaIndex){
     if( elisaTestRunning ) {
         updateElisaTestRun(elisaIndex);
